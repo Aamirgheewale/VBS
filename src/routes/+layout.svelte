@@ -12,6 +12,8 @@
   .bg-purple {
     background-color: #9A86D1;
   }
+
+
 </style>
 
 <Navbar />
@@ -60,9 +62,9 @@
       <!-- Help & Contacts -->
       <div class="col-md-2 mb-3">
         <div class="fw-semibold mb-2">Help & Contacts</div>
-        <div class="small"><i class="bi bi-telephone-fill me-2"></i> +445 87 999 000</div>
-        <div class="small"><i class="bi bi-clock me-2"></i> Mo-Fri, 9 AM to 11 PM</div>
-        <div class="small"><i class="bi bi-envelope me-2"></i> b.world@store.ro</div>
+        <div class="small"><i class="bi bi-telephone-fill me-2"></i> +91 12345 67890</div>
+        <!-- <div class="small"><i class="bi bi-clock me-2"></i> Mo-Fri, 9 AM to 11 PM</div> -->
+        <div class="small"><i class="bi bi-envelope me-2"></i> VBS.books@gmail.com</div>
       </div>
       <!-- Request a Call -->
       <div class="col-md-2 mb-3 d-flex flex-column align-items-end">

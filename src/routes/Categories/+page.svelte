@@ -8,25 +8,25 @@
           title: "Harlem Shuffle",
           author: "Colson Whitehead",
           price: 26.92,
-          img: "/assets/harlem-shuffle.jpg"
+          img: "/assets/card1.png"
         },
         {
           title: "Two Old Women",
           author: "Velma Wallis",
           price: 13.95,
-          img: "/assets/two-old-women.jpg"
+          img: "/assets/card2.png"
         },
         {
           title: "Carrie Soto Is Back",
           author: "Taylor Jenkins Reid",
           price: 26.04,
-          img: "/assets/carrie-soto.jpg"
+          img: "/assets/card3.png"
         },
         {
           title: "Book Lovers",
           author: "Emily Henry",
           price: 15.81,
-          img: "/assets/book-lovers.jpg"
+          img: "/assets/card4.png"
         }
       ]
     },
@@ -38,25 +38,25 @@
           title: "Harlem Shuffle",
           author: "Colson Whitehead",
           price: 26.92,
-          img: "/assets/harlem-shuffle.jpg"
+          img: "/assets/card4.png"
         },
         {
           title: "Two Old Women",
           author: "Velma Wallis",
           price: 13.95,
-          img: "/assets/two-old-women.jpg"
+          img: "/assets/card3.png"
         },
         {
           title: "Carrie Soto Is Back",
           author: "Taylor Jenkins Reid",
           price: 26.04,
-          img: "/assets/carrie-soto.jpg"
+          img: "/assets/card2.png"
         },
         {
           title: "Book Lovers",
           author: "Emily Henry",
           price: 15.81,
-          img: "/assets/book-lovers.jpg"
+          img: "/assets/card1.png"
         }
       ]
     },
@@ -68,25 +68,25 @@
           title: "Harlem Shuffle",
           author: "Colson Whitehead",
           price: 26.92,
-          img: "/assets/harlem-shuffle.jpg"
+          img: "/assets/card1.png"
         },
         {
           title: "Two Old Women",
           author: "Velma Wallis",
           price: 13.95,
-          img: "/assets/two-old-women.jpg"
+          img: "/assets/card2.png"
         },
         {
           title: "Carrie Soto Is Back",
           author: "Taylor Jenkins Reid",
           price: 26.04,
-          img: "/assets/carrie-soto.jpg"
+          img: "/assets/card3.png"
         },
         {
           title: "Book Lovers",
           author: "Emily Henry",
           price: 15.81,
-          img: "/assets/book-lovers.jpg"
+          img: "/assets/card4.png"
         }
       ]
     }
@@ -94,7 +94,7 @@
 </script>
 
 <div class="container my-4">
-  <h2 class="text-center fw-bold mb-4">Categories</h2>
+  <h2 class="fw-bold mb-4">Categories</h2>
   {#each categories as category}
     <h4 class="fw-bold mt-5 mb-3 text-center">{category.name}</h4>
     <div class="d-flex align-items-stretch justify-content-center gap-3 mb-5">
@@ -104,7 +104,7 @@
           <div class="card-body p-2">
             <h6 class="fw-bold mb-1">{book.title}</h6>
             <div class="text-muted" style="font-size:0.98rem;">{book.author}</div>
-            <div class="fw-bold mt-1 mb-2">${book.price}</div>
+            <div class="fw-bold mt-1 mb-2">₹{book.price}</div>
             <button class="btn btn-purple w-100">
               <i class="bi bi-cart"></i> Add to cart
             </button>

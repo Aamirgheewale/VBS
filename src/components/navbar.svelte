@@ -1,9 +1,14 @@
 <script>
+  import { page } from '$app/stores';
+  import { derived } from 'svelte/store';
   let searchQuery = '';
+
   const handleSearch = () => {
-    // Implement book search routing if needed
     window.location.href = `/books?search=${encodeURIComponent(searchQuery)}`;
   };
+
+  // Reactive store with current path for active link detection
+  const currentPath = derived(page, ($page) => $page.url.pathname.toLowerCase());
 </script>
 
 <style>
@@ -81,8 +86,11 @@
     text-decoration: none;
     transition: background 0.16s, color 0.16s;
   }
-  .nav-link.home-active,
   .nav-link:hover {
+    background: #9A5CD5;
+    color: #fff !important;
+  }
+  .nav-link.active {
     background: #9A5CD5;
     color: #fff !important;
   }
@@ -107,17 +115,27 @@
         <i class="bi bi-search"></i>
       </button>
     </div>
-    <!-- Navigation links -->
+    <!-- Navigation links with reactive active class -->
     <div class="nav-links">
-      <a href="/" class="nav-link home-active">Home</a>
-      <a href="/Books" class="nav-link">Categories</a>
-      <a href="/library" class="nav-link">My Books</a>
-      <a href="/cart" class="nav-link">
-        Cart <i class="bi bi-cart"></i>
-      </a>
-      <a href="/profile" class="nav-link">
-        Profile/Login <i class="bi bi-person"></i>
-      </a>
+      {#each [
+        { href: '/', label: 'Home' },
+        { href: '/Categories', label: 'Categories' },
+        { href: '/Books', label: 'My Books' },
+        { href: '/cart', label: 'Cart', icon: 'bi-cart' },
+        { href: '/Profile', label: 'Profile/Login', icon: 'bi-person' }
+      ] as link}
+        <a
+          href={link.href}
+          class="nav-link"
+          class:active={$currentPath === link.href.toLowerCase()}
+          aria-current={$currentPath === link.href.toLowerCase() ? 'page' : undefined}
+        >
+          {link.label}
+          {#if link.icon}
+            <i class={"bi " + link.icon} style="margin-left: 4px;"></i>
+          {/if}
+        </a>
+      {/each}
     </div>
   </div>
 </nav>

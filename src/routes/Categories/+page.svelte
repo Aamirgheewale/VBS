@@ -98,21 +98,31 @@
   {#each categories as category}
     <h4 class="fw-bold mt-5 mb-3 text-center">{category.name}</h4>
     <div class="d-flex align-items-stretch justify-content-center gap-3 mb-5">
-      {#each category.books as book}
-        <div class="card text-center" style="min-width:210px; max-width:240px;">
-          <img src={book.img} alt={book.title} class="card-img-top" style="height:250px; object-fit:cover;" />
-          <div class="card-body p-2">
-            <h6 class="fw-bold mb-1">{book.title}</h6>
-            <div class="text-muted" style="font-size:0.98rem;">{book.author}</div>
-            <div class="fw-bold mt-1 mb-2">₹{book.price}</div>
-            <button class="btn btn-purple w-100">
-              <i class="bi bi-cart"></i> Add to cart
-            </button>
+      
+        {#each category.books as book}
+          <div class="card text-center" style="min-width:210px; max-width:240px;">
+            <img src={book.img} alt={book.title} class="card-img-top" style="height:250px; object-fit:cover;" />
+            <div class="card-body p-2">
+              <h6 class="fw-bold mb-1">{book.title}</h6>
+              <div class="text-muted" style="font-size:0.98rem;">{book.author}</div>
+              <div class="fw-bold mt-1 mb-2">₹{book.price}</div>
+              <button class="btn btn-purple w-100">
+                <i class="bi bi-cart"></i> Add to cart
+              </button>
+            </div>
           </div>
-        </div>
+          
       {/each}
     </div>
+    <div class="d-flex justify-content-center">
+      <button class="btn px-4 fw-semibold view-all" style="border: 2px solid #9A86D1;" 
+      on:click={() => window.location.href = `/books?genre=${encodeURIComponent(category.name.toLowerCase())}`}>
+        View All
+      </button>
+    </div>
+
   {/each}
+
 </div>
 
 <style>
@@ -124,5 +134,9 @@
   }
   .btn-purple:hover {
     background-color: #8057B3 !important;
+  }
+  .view-all:hover {
+    background-color: #9A86D1 !important;
+    color: #fff !important;
   }
 </style>

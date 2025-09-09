@@ -1,5 +1,30 @@
 <script>
   import Navbar from '../components/navbar.svelte';
+  import Toasts from '$lib/Toasts.svelte';
+  import { onMount } from 'svelte';
+  import { writable } from 'svelte/store';
+
+const showBackToTop = writable(false);
+
+  onMount(() => {
+    // Get navbar height for scroll threshold
+    const navbar = document.querySelector('nav');
+    const threshold = navbar ? navbar.offsetHeight : 100;
+
+    function onScroll() {
+      showBackToTop.set(window.scrollY > threshold);
+    }
+
+    window.addEventListener('scroll', onScroll);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+    };
+  });
+
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 </script>
 
 <style>
@@ -12,15 +37,49 @@
   .bg-purple {
     background-color: #9A86D1;
   }
-
+  .back-to-top {
+    position: fixed;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    background: #9A86D1;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    font-size: 1.8rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(154, 134, 209, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+    transition: opacity 0.3s ease;
+  }
+  .back-to-top:hover {
+    background: #8057B3;
+  }
+  .back-to-top:hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
 
 </style>
 
 <Navbar />
 
+
+
 <main>
   <slot />
+  <Toasts />
 </main>
+
+{#if $showBackToTop}
+  <button class="back-to-top" aria-label="Back to top" on:click={scrollToTop}>
+    ↑
+  </button>
+{/if}
 
 <!-- <footer style="text-align:center; margin-top:2rem; color: #888;">
   &copy; 2025 Virtual Bookstore

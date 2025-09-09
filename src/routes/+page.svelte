@@ -1,12 +1,15 @@
 <script lang="ts">
    // Data for each carousel slide
-  let authors = [
+    import { addToCart } from '$lib/cartStore';
+    import { showToast } from '$lib/toastStore';
+    import type { Book } from '$lib/types';
+   let authors = [
     {
       badge: "Author of August",
       name: "Eric-Emanuel Schmitt",
       description: "Eric-Emmanuel Schmitt has been awarded more than 20 literary prizes and distinctions, and in 2001 he received the title of Chevalier des Arts et des Lettres. His books have been translated into over 40 languages.",
       btn: "View his books",
-      btnLink: "/books?author=Eric-Emanuel%20Schmitt",
+      btnLink: "/Categories",
       img: "/assets/book1.png"
     },
     {
@@ -14,7 +17,7 @@
       name: "Tori Dunlap",
       description: "Tori Dunlap is an entrepreneur and author. Her impactful work in financial education led to her bestselling book and wide recognition among financial circles.",
       btn: "View her books",
-      btnLink: "/books?author=Tori%20Dunlap",
+      btnLink: "/Categories",
       img: "/assets/book1.png"
     },
     {
@@ -22,7 +25,7 @@
       name: "Taylor Jenkins Reid",
       description: "Taylor Jenkins Reid has written multiple critically acclaimed novels, best known for immersive stories and rich, relatable characters enjoyed by readers worldwide.",
       btn: "View her books",
-      btnLink: "/books?author=Taylor%20Jenkins%20Reid",
+      btnLink: "/Categories",
       img: "/assets/book1.png"
     }
   ];
@@ -84,6 +87,17 @@
       img: "/assets/bookcover.png"
     }
   ];
+
+   function handleAddToCart(book: Book) {
+    addToCart({
+      id: String(book.id),
+      title: book.title,
+      author: book.author,
+      price: book.price,
+      image: book.img
+    });
+    showToast('Item added to cart', 'success');
+  }
 </script>
 
 <!-- Hero Section -->
@@ -141,7 +155,7 @@
           <div class="card-body text-center">
             <h5 class="card-title fw-bold">{book.title}</h5>
             <p class="card-text small">{book.author}</p>
-            <a href="/categories" class="btn btn-purple mt-2">
+            <a href="/Categories" class="btn btn-purple mt-2">
               Go to Category
             </a>
           </div>
@@ -163,9 +177,15 @@
             <h5 class="card-title fw-bold">{book.title}</h5>
             <div class="card-text small mb-2">{book.author}</div>
             <div class="fw-bold mb-2">₹{book.price}</div>
-            <button class="btn btn-purple w-100">
-              <i class="bi bi-cart"></i> Add to cart
-            </button>
+            <button
+    class="btn btn-purple w-100"
+  on:click={() =>
+    handleAddToCart(book)
+  }
+>
+  <i class="bi bi-cart"></i> Add to cart
+</button>
+
           </div>
         </div>
       </div>
@@ -185,9 +205,14 @@
             <h5 class="card-title fw-bold">{book.title}</h5>
             <div class="card-text small mb-2">{book.author}</div>
             <div class="fw-bold mb-2">₹{book.price}</div>
-            <button class="btn btn-purple w-100">
-              <i class="bi bi-cart"></i> Add to cart
-            </button>
+            <button
+    class="btn btn-purple w-100"
+  on:click={() =>
+    handleAddToCart(book)
+  }
+>
+  <i class="bi bi-cart"></i> Add to cart
+</button> 
           </div>
         </div>
       </div>

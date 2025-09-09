@@ -1,28 +1,31 @@
 <script lang="ts">
+  import { addToCart } from '$lib/cartStore';
+    import { showToast } from '$lib/toastStore';
+    import type { Book } from '$lib/types';
   // Sample data
   let categories = [
     {
       name: "Action",
       books: [
-        {
+        { id: 1,
           title: "Harlem Shuffle",
           author: "Colson Whitehead",
           price: 26.92,
           img: "/assets/card1.png"
         },
-        {
+        {id: 2,
           title: "Two Old Women",
           author: "Velma Wallis",
           price: 13.95,
           img: "/assets/card2.png"
         },
-        {
+        {id: 3,
           title: "Carrie Soto Is Back",
           author: "Taylor Jenkins Reid",
           price: 26.04,
           img: "/assets/card3.png"
         },
-        {
+        {id: 4,
           title: "Book Lovers",
           author: "Emily Henry",
           price: 15.81,
@@ -34,25 +37,25 @@
       name: "Romance",
       books: [
         // Same books for demo
-        {
+        {id: 1,
           title: "Harlem Shuffle",
           author: "Colson Whitehead",
           price: 26.92,
           img: "/assets/card4.png"
         },
-        {
+        {id: 2,
           title: "Two Old Women",
           author: "Velma Wallis",
           price: 13.95,
           img: "/assets/card3.png"
         },
-        {
+        {id: 3,
           title: "Carrie Soto Is Back",
           author: "Taylor Jenkins Reid",
           price: 26.04,
           img: "/assets/card2.png"
         },
-        {
+        {id: 4,
           title: "Book Lovers",
           author: "Emily Henry",
           price: 15.81,
@@ -64,25 +67,55 @@
       name: "Drama",
       books: [
         // Same books for demo
-        {
+        {id: 1,
           title: "Harlem Shuffle",
           author: "Colson Whitehead",
           price: 26.92,
           img: "/assets/card1.png"
         },
-        {
+        {id: 2,
           title: "Two Old Women",
           author: "Velma Wallis",
           price: 13.95,
           img: "/assets/card2.png"
         },
-        {
+        {id: 3,
           title: "Carrie Soto Is Back",
           author: "Taylor Jenkins Reid",
           price: 26.04,
           img: "/assets/card3.png"
         },
-        {
+        {id: 4,
+          title: "Book Lovers",
+          author: "Emily Henry",
+          price: 15.81,
+          img: "/assets/card4.png"
+        }
+      ]
+    },
+    {
+      name: "Fantasy",
+      books: [
+        // Same books for demo
+        {id: 1,
+          title: "Harlem Shuffle",
+          author: "Colson Whitehead",
+          price: 26.92,
+          img: "/assets/card1.png"
+        },
+        {id: 2,
+          title: "Two Old Women",
+          author: "Velma Wallis",
+          price: 13.95,
+          img: "/assets/card2.png"
+        },
+        {id: 3,
+          title: "Carrie Soto Is Back",
+          author: "Taylor Jenkins Reid",
+          price: 26.04,
+          img: "/assets/card3.png"
+        },
+        {id: 4,
           title: "Book Lovers",
           author: "Emily Henry",
           price: 15.81,
@@ -91,6 +124,16 @@
       ]
     }
   ];
+  function handleAddToCart(book: Book) {
+    addToCart({
+      id: String(book.id),
+      title: book.title,
+      author: book.author,
+      price: book.price,
+      image: book.img
+    });
+    showToast('Item added to cart', 'success');
+  }
 </script>
 
 <div class="container my-4">
@@ -106,9 +149,14 @@
               <h6 class="fw-bold mb-1">{book.title}</h6>
               <div class="text-muted" style="font-size:0.98rem;">{book.author}</div>
               <div class="fw-bold mt-1 mb-2">₹{book.price}</div>
-              <button class="btn btn-purple w-100">
-                <i class="bi bi-cart"></i> Add to cart
-              </button>
+               <button
+    class="btn btn-purple w-100"
+  on:click={() =>
+    handleAddToCart(book)
+  }
+>
+  <i class="bi bi-cart"></i> Add to cart
+</button>
             </div>
           </div>
           

@@ -1,14 +1,30 @@
-<script>
+<script lang="ts">
   import { page } from '$app/stores';
   import { derived } from 'svelte/store';
+
   let searchQuery = '';
+
+  const genres: string[] = [
+    "Action",
+    "Drama",
+    "Romance",
+    "Fantasy",
+    "Mystery",
+    "Comedy",
+    "Historical",
+    "Science Fiction",
+    "Horror"
+  ];
 
   const handleSearch = () => {
     window.location.href = `/books?search=${encodeURIComponent(searchQuery)}`;
   };
 
-  // Reactive store with current path for active link detection
   const currentPath = derived(page, ($page) => $page.url.pathname.toLowerCase());
+
+  function goToGenre(genre: string) {
+    window.location.href = `/books?genre=${encodeURIComponent(genre)}`;
+  }
 </script>
 
 <style>
@@ -85,6 +101,7 @@
     background: none;
     text-decoration: none;
     transition: background 0.16s, color 0.16s;
+    user-select: none;
   }
   .nav-link:hover {
     background: #9A5CD5;
@@ -94,15 +111,65 @@
     background: #9A5CD5;
     color: #fff !important;
   }
+
+  /* Dropdown styles */
+  .nav-dropdown {
+    position: relative;
+  }
+  .nav-dropdown > .nav-link {
+    cursor: pointer;
+  }
+  .nav-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 185px;
+    background: #fff;
+    box-shadow: 0 4px 18px rgba(80, 60, 140, 0.13);
+    border-radius: 16px;
+    border: 1px solid #ececec;
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(.36,1.39,.57,1);
+    z-index: 100;
+  }
+  .nav-dropdown:hover > .nav-dropdown-menu {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .nav-dropdown-menu li {
+    padding: 0;
+    list-style: none;
+  }
+  .nav-dropdown-menu button {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0.6rem 1.1rem;
+    color: #68217A;
+    font-weight: 500;
+    font-family: inherit;
+    font-size: 1rem;
+    text-align: left;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.17s, color 0.15s;
+  }
+  .nav-dropdown-menu button:hover,
+  .nav-dropdown-menu button:focus {
+    background: #9A5CD5;
+    color: #fff;
+    outline: none;
+  }
 </style>
 
 <nav>
   <div class="navbar-content">
-    <!-- Logo on left; clicking navigates to homepage -->
     <a href="/" class="logo-link">
       <img src="/assets/VBS.png" alt="Virtual Bookstore Logo" class="logo-img" />
     </a>
-    <!-- Search bar -->
     <div class="search-bar-container">
       <input
         type="text"
@@ -115,27 +182,31 @@
         <i class="bi bi-search"></i>
       </button>
     </div>
-    <!-- Navigation links with reactive active class -->
     <div class="nav-links">
-      {#each [
-        { href: '/', label: 'Home' },
-        { href: '/Categories', label: 'Categories' },
-        { href: '/Books', label: 'My Books' },
-        { href: '/cart', label: 'Cart', icon: 'bi-cart' },
-        { href: '/Profile', label: 'Profile/Login', icon: 'bi-person' }
-      ] as link}
-        <a
-          href={link.href}
-          class="nav-link"
-          class:active={$currentPath === link.href.toLowerCase()}
-          aria-current={$currentPath === link.href.toLowerCase() ? 'page' : undefined}
-        >
-          {link.label}
-          {#if link.icon}
-            <i class={"bi " + link.icon} style="margin-left: 4px;"></i>
-          {/if}
-        </a>
-      {/each}
+      <a href="/" class="nav-link" class:active={$currentPath === '/'}>Home</a>
+      <a href="/Categories" class="nav-link" class:active={$currentPath === '/categories'}>Categories</a>
+
+      <div class="nav-dropdown">
+        <span class="nav-link">
+          My Books <i class="bi bi-chevron-down" style="margin-left: 6px;"></i>
+        </span>
+        <ul class="nav-dropdown-menu">
+          {#each genres as genre}
+            <li>
+              <button type="button" on:click={() => goToGenre(genre)}>
+                {genre}
+              </button>
+            </li>
+          {/each}
+        </ul>
+      </div>
+
+      <a href="/cart" class="nav-link" class:active={$currentPath === '/cart'}>
+        Cart <i class="bi bi-cart"></i>
+      </a>
+      <a href="/profile" class="nav-link" class:active={$currentPath === '/profile'}>
+        Profile/Login <i class="bi bi-person"></i>
+      </a>
     </div>
   </div>
 </nav>

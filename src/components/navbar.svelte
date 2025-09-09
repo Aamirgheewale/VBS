@@ -204,7 +204,7 @@
       <a href="/cart" class="nav-link" class:active={$currentPath === '/cart'}>
         Cart <i class="bi bi-cart"></i>
       </a>
-      <a href="/profile" class="nav-link" class:active={$currentPath === '/profile'}>
+      <a href="/Profile" class="nav-link" class:active={$currentPath === '/profile'}>
         Profile/Login <i class="bi bi-person"></i>
       </a>
     </div>

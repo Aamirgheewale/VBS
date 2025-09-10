@@ -1,22 +1,31 @@
 import { writable } from 'svelte/store';
 
 export interface CartItem {
-  id: string; // unique book id
+  id: string;
   title: string;
   author: string;
   price: number;
   image: string;
   quantity: number;
+  pdfUrl?: string; // Optional PDF URL
 }
 
-export const cart = writable<CartItem[]>([]);
+const storedCart = typeof localStorage !== 'undefined'
+  ? JSON.parse(localStorage.getItem('cart') || '[]')
+  : [];
 
-// Add to cart logic
+export const cart = writable<CartItem[]>(storedCart);
+
+cart.subscribe((items) => {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('cart', JSON.stringify(items));
+  }
+});
+
 export function addToCart(book: Omit<CartItem, 'quantity'>, qty = 1) {
   cart.update(items => {
     const index = items.findIndex(item => item.id === book.id);
     if (index > -1) {
-      // already in cart: increase qty
       items[index].quantity += qty;
     } else {
       items.push({ ...book, quantity: qty });
@@ -25,14 +34,17 @@ export function addToCart(book: Omit<CartItem, 'quantity'>, qty = 1) {
   });
 }
 
-// Remove from cart
 export function removeFromCart(id: string) {
   cart.update(items => items.filter(item => item.id !== id));
 }
 
-// Update quantity
 export function setQuantity(id: string, quantity: number) {
-  cart.update(items => items.map(item =>
-    item.id === id ? ({ ...item, quantity }) : item
-  ));
+  cart.update(items =>
+    items.map(item => (item.id === id ? { ...item, quantity } : item))
+  );
+}
+
+// New - clear all items from cart after purchase
+export function clearCart() {
+  cart.set([]);
 }

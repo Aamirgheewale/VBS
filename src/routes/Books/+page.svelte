@@ -1,13 +1,19 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
+  import { addToCart } from '$lib/cartStore';
+  import { showToast } from '$lib/toastStore';
+import { wishlist, addToWishlist } from '$lib/wishlistStore';
+import type { WishlistItem } from '$lib/wishlistStore';
+
 
   interface Book {
+    id: number;
     title: string;
     author: string;
     rating: number;
     price: number;
-    image: string;
+    img: string;
     description: string;
     publisher: string;
     pubDate: string;
@@ -27,26 +33,27 @@
   // ONLY declare this once!
   const allBooksByGenre: BookGenreMap = { 
     action: [
-      {
+      { id: 1,
         title: "Action Book 1",
         author: "Author A",
         rating: 4.2,
         price: 15.99,
-        image: "/assets/card1.png",
+        img: "/assets/card1.png",
         description: "Exciting action-packed novel.",
         publisher: "Action Publisher",
         pubDate: "January 1, 2023",
         language: "English",
         age: "16+",
         pages: "350",
-        dimensions: "6 x 9 inches"
+        dimensions: "6 x 9 inches",
+        
       },
-      {
+      {id: 2,
         title: "Action Book 1",
         author: "Author A",
         rating: 4.2,
         price: 15.99,
-        image: "/assets/card1.png",
+        img: "/assets/card1.png",
         description: "Exciting action-packed novel.",
         publisher: "Action Publisher",
         pubDate: "January 1, 2023",
@@ -58,12 +65,12 @@
       // Add more action books here
     ],
     drama: [
-      {
+      {id: 1,
         title: "Drama Book 1",
         author: "Author D",
         rating: 4.7,
         price: 12.49,
-        image: "/assets/card2.png",
+        img: "/assets/card2.png",
         description: "A heartfelt drama story.",
         publisher: "Drama Publisher",
         pubDate: "March 15, 2022",
@@ -75,12 +82,12 @@
       // Add more drama books here
     ],
     romance: [
-      {
+      { id: 1,
         title: "Romance Book 1",
         author: "Author R",
         rating: 4.4,
         price: 13.95,
-        image: "/assets/card3.png",
+        img: "/assets/card3.png",
         description: "A beautiful love story.",
         publisher: "Romance Publisher",
         pubDate: "February 14, 2021",
@@ -92,12 +99,12 @@
       // Add more romance books here
     ],
     fantasy: [
-      {
+      {id: 1,
         title: "Chain of Gold: The Last Hours #1",
         author: "Cassandra Clare",
         rating: 4.5,
         price: 12.49,
-        image: "/assets/card1.png",
+        img: "/assets/card1.png",
         description: "From #1 New York Times bestselling author Cassandra Clare...",
         publisher: "Margaret K. Books",
         pubDate: "March 3, 2020",
@@ -111,7 +118,7 @@
     mystery: [],
     comedy: [],
     historical: [],
-    "science fiction": [],
+    science_fiction: [],
     horror: []
   };
 
@@ -123,8 +130,37 @@
   });
 
   // Placeholder methods for buttons
-  function addToCart(book: Book) { /* TODO */ }
-  function favorite(book: Book) { /* TODO */ }
+  function handleAddToCart(book: Book) {
+    addToCart({
+      id: String(book.id),
+      title: book.title,
+      author: book.author,
+      price: book.price,
+      image: book.img
+    });
+    showToast('Item added to cart', 'success');
+  }
+
+  // function favorite(book: Book) { /* TODO */ }
+
+  let currentWishlist: WishlistItem[] = [];
+
+  wishlist.subscribe((value: WishlistItem[]) => {
+    currentWishlist = value;
+  });
+
+function favorite(book: Book) {
+  addToWishlist({
+    id: String(book.id),
+    title: book.title,
+    author: book.author,
+    image: book.img,
+    price: book.price
+  });
+  showToast('Added to wishlist', 'success'); // optionally import and use showToast for feedback
+}
+
+
 </script>
 
 <div class="container my-5">
@@ -133,7 +169,7 @@
     {#each genreBooks as book}
       <div class="row align-items-center mb-5">
         <div class="col-md-4 text-center">
-          <img src={book.image} alt={book.title} style="max-width:80%;border-radius:10px;" />
+          <img src={book.img} alt={book.title} style="max-width:80%;border-radius:10px;" />
         </div>
         <div class="col-md-8">
           <h4 class="fw-bold">{book.title}</h4>
@@ -147,12 +183,20 @@
           <div class="fs-4 fw-bold mb-2">${book.price}</div>
           <p style="color: #555;">{book.description}</p>
           <div class="d-flex gap-3 mb-3">
-            <button class="btn btn-purple px-4 fw-semibold" on:click={() => addToCart(book)}>
+            <button class="btn btn-purple px-4 fw-semibold" on:click={() => handleAddToCart(book)}>
               <i class="bi bi-cart"></i> Add to cart
             </button>
-            <button class="btn btn-outline-purple px-4 fw-semibold" on:click={() => favorite(book)}>
-              Favorite
-            </button>
+            <button
+  class="btn btn-outline-purple px-4 fw-semibold"
+  on:click={() => favorite(book)}
+  disabled={currentWishlist.some(item => item.id === String(book.id))}
+>
+  {#if currentWishlist.some(item => item.id === String(book.id))}
+    ★ Favorited
+  {:else}
+    Favorite
+  {/if}
+</button>
           </div>
           <div class="row mt-3 text-muted small">
             <div class="col-6">Publisher: <span class="fw-bold">{book.publisher}</span></div>

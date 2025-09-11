@@ -1,6 +1,7 @@
 <script lang="ts">
   import { cart, removeFromCart, setQuantity } from '$lib/cartStore';
   import type { CartItem } from '$lib/cartStore';
+  import { goto } from '$app/navigation';
   import { get } from 'svelte/store';
 
   let cartItems: CartItem[] = [];
@@ -19,8 +20,16 @@
   }
 
   function returnToBooks() {
-    window.location.href = "/categories";
+    window.location.href = "/Categories";
   }
+  
+  function proceedToCheckout() {
+  if (cartItems.length === 0) {
+    alert("Cart is empty.");
+    return;
+  }
+  goto('/checkout');
+}
 </script>
 
 <div class="container my-5">
@@ -71,7 +80,8 @@
       <div class="d-flex justify-content-between mb-2"><span>Subtotal:</span><span>₹{subtotal}</span></div>
       <hr>
       <div class="d-flex justify-content-between mb-3"><span>Total:</span><span class="fw-bold">₹{total}</span></div>
-      <button class="btn btn-purple w-100" disabled>Proceed to checkout</button>
+      <button class="btn btn-purple" on:click={proceedToCheckout}>Proceed to Checkout</button>
+
     </div>
   </div>
 </div>

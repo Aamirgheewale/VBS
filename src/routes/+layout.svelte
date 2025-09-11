@@ -1,31 +1,29 @@
-<script>
+<script lang="ts">
   import Navbar from '../components/navbar.svelte';
   import Toasts from '$lib/Toasts.svelte';
   import { onMount } from 'svelte';
   import { writable } from 'svelte/store';
+  import { page } from '$app/stores';
 
-const showBackToTop = writable(false);
+  // Svelte store for back to top button
+  const showBackToTop = writable(false);
 
   onMount(() => {
-    // Get navbar height for scroll threshold
     const navbar = document.querySelector('nav');
     const threshold = navbar ? navbar.offsetHeight : 100;
 
     function onScroll() {
       showBackToTop.set(window.scrollY > threshold);
     }
-
     window.addEventListener('scroll', onScroll);
-
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-    };
+    return () => window.removeEventListener('scroll', onScroll);
   });
 
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 </script>
+
 
 <style>
    main {
@@ -65,10 +63,9 @@ const showBackToTop = writable(false);
   }
 
 </style>
-
-<Navbar />
-
-
+{#if $page.url.pathname !== '/signup' && String($page.url.pathname) !== '/login' && String($page.url.pathname) !== '/forgot'}
+  <Navbar />
+{/if}
 
 <main>
   <slot />
@@ -81,10 +78,11 @@ const showBackToTop = writable(false);
   </button>
 {/if}
 
+
 <!-- <footer style="text-align:center; margin-top:2rem; color: #888;">
   &copy; 2025 Virtual Bookstore
 </footer> -->
-<footer class="bg-purple text-white pt-4 pb-2">
+<footer class="bg-purple text-white pt-4 pb-2"  >
   <div class="container">
     <div class="row mb-3">
       <!-- Brand/Info -->
@@ -93,7 +91,8 @@ const showBackToTop = writable(false);
         <div class="d-flex gap-2 mt-3">
           <a href="/" class="text-white" aria-label="Facebook"><i class="bi bi-facebook fs-4"></i></a>
           <a href="/" class="text-white" aria-label="Instagram"><i class="bi bi-instagram fs-4"></i></a>
-          <a href="/" class="text-white" aria-label="Twitter"><i class="bi bi-twitter fs-4"></i></a>
+          
+          <a href="https://www.linkedin.com/in/aamirgheewale/" target="_blank" rel="noopener noreferrer" class="text-white" aria-label="LinkedIn"><i class="bi bi-linkedin fs-4"></i></a>
         </div>
       </div>
       <!-- Categories -->

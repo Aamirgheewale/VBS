@@ -6,6 +6,22 @@
 import { wishlist, addToWishlist } from '$lib/wishlistStore';
 import type { WishlistItem } from '$lib/wishlistStore';
 
+let books: { id: number; title: string; author: string }[] = [];
+
+  async function loadBooks() {
+    const res = await fetch('/api/books');
+    books = await res.json();
+  }
+  onMount(loadBooks);
+
+  async function addBook() {
+    await fetch('/api/books', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'Example', author: 'Someone' })
+    });
+    await loadBooks(); // reload after adding
+  }
 
   interface Book {
     id: number;

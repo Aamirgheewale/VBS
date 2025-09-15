@@ -1,136 +1,59 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { addToCart } from '$lib/cartStore';
-    import { showToast } from '$lib/toastStore';
-    import type { Book } from '$lib/types';
-  // Sample data
-  let categories = [
-    {
-      name: "Action",
-      books: [
-        { id: 1,
-          title: "Harlem Shuffle",
-          author: "Colson Whitehead",
-          price: 26.92,
-          img: "/assets/card1.png"
-        },
-        {id: 2,
-          title: "Two Old Women",
-          author: "Velma Wallis",
-          price: 13.95,
-          img: "/assets/card2.png"
-        },
-        {id: 3,
-          title: "Carrie Soto Is Back",
-          author: "Taylor Jenkins Reid",
-          price: 26.04,
-          img: "/assets/card3.png"
-        },
-        {id: 4,
-          title: "Book Lovers",
-          author: "Emily Henry",
-          price: 15.81,
-          img: "/assets/card4.png"
-        }
-      ]
-    },
-    {
-      name: "Romance",
-      books: [
-        // Same books for demo
-        {id: 1,
-          title: "Harlem Shuffle",
-          author: "Colson Whitehead",
-          price: 26.92,
-          img: "/assets/card4.png"
-        },
-        {id: 2,
-          title: "Two Old Women",
-          author: "Velma Wallis",
-          price: 13.95,
-          img: "/assets/card3.png"
-        },
-        {id: 3,
-          title: "Carrie Soto Is Back",
-          author: "Taylor Jenkins Reid",
-          price: 26.04,
-          img: "/assets/card2.png"
-        },
-        {id: 4,
-          title: "Book Lovers",
-          author: "Emily Henry",
-          price: 15.81,
-          img: "/assets/card1.png"
-        }
-      ]
-    },
-    {
-      name: "Drama",
-      books: [
-        // Same books for demo
-        {id: 1,
-          title: "Harlem Shuffle",
-          author: "Colson Whitehead",
-          price: 26.92,
-          img: "/assets/card1.png"
-        },
-        {id: 2,
-          title: "Two Old Women",
-          author: "Velma Wallis",
-          price: 13.95,
-          img: "/assets/card2.png"
-        },
-        {id: 3,
-          title: "Carrie Soto Is Back",
-          author: "Taylor Jenkins Reid",
-          price: 26.04,
-          img: "/assets/card3.png"
-        },
-        {id: 4,
-          title: "Book Lovers",
-          author: "Emily Henry",
-          price: 15.81,
-          img: "/assets/card4.png"
-        }
-      ]
-    },
-    {
-      name: "Fantasy",
-      books: [
-        // Same books for demo
-        {id: 1,
-          title: "Harlem Shuffle",
-          author: "Colson Whitehead",
-          price: 26.92,
-          img: "/assets/card1.png"
-        },
-        {id: 2,
-          title: "Two Old Women",
-          author: "Velma Wallis",
-          price: 13.95,
-          img: "/assets/card2.png"
-        },
-        {id: 3,
-          title: "Carrie Soto Is Back",
-          author: "Taylor Jenkins Reid",
-          price: 26.04,
-          img: "/assets/card3.png"
-        },
-        {id: 4,
-          title: "Book Lovers",
-          author: "Emily Henry",
-          price: 15.81,
-          img: "/assets/card4.png"
-        }
-      ]
+  import { showToast } from '$lib/toastStore';
+  import type { Book } from '$lib/types';
+
+  interface Category {
+    id: number;
+    name: string;
+    description?: string;
+  }
+  interface Book {
+    id: number;
+    title: string;
+    author: string;
+    price: number;
+    img?: string;
+  }
+
+  let categories: Category[] = [];
+  let categoryBooks: { [key: number]: Book[] } = {};
+
+  async function loadCategories() {
+    const res = await fetch('/api/categories');
+    if (res.ok) {
+      categories = await res.json();
+    } else {
+      console.error('Failed to load categories');
     }
-  ];
+  }
+
+  async function loadBooksForCategory(categoryId: number) {
+    const res = await fetch(`/api/categories/books?category_id=${categoryId}`);
+    if (res.ok) {
+      categoryBooks[categoryId] = await res.json();
+    } else {
+      console.error(`Failed to load books for category ${categoryId}`);
+    }
+  }
+
+  onMount(loadCategories);
+
+  // Load books when user clicks "View All" button if not already loaded
+  async function handleViewAll(category: Category) {
+    if (!categoryBooks[category.id]) {
+      await loadBooksForCategory(category.id);
+    }
+  }
+
   function handleAddToCart(book: Book) {
     addToCart({
       id: String(book.id),
       title: book.title,
       author: book.author,
       price: book.price,
-      image: book.img
+      image: book.img ?? ''
     });
     showToast('Item added to cart', 'success');
   }
@@ -141,36 +64,28 @@
   {#each categories as category}
     <h4 class="fw-bold mt-5 mb-3 text-center">{category.name}</h4>
     <div class="d-flex align-items-stretch justify-content-center gap-3 mb-5">
-      
-        {#each category.books as book}
+      {#if categoryBooks[category.id]}
+        {#each categoryBooks[category.id] as book}
           <div class="card text-center" style="min-width:210px; max-width:240px;">
             <img src={book.img} alt={book.title} class="card-img-top" style="height:250px; object-fit:cover;" />
             <div class="card-body p-2">
               <h6 class="fw-bold mb-1">{book.title}</h6>
               <div class="text-muted" style="font-size:0.98rem;">{book.author}</div>
               <div class="fw-bold mt-1 mb-2">₹{book.price}</div>
-               <button
-    class="btn btn-purple w-100"
-  on:click={() =>
-    handleAddToCart(book)
-  }
->
-  <i class="bi bi-cart"></i> Add to cart
-</button>
+              <button class="btn btn-purple w-100" on:click={() => handleAddToCart(book)}>
+                <i class="bi bi-cart"></i> Add to cart
+              </button>
             </div>
           </div>
-          
-      {/each}
+        {/each}
+      {:else}
+        <button class="btn px-4 fw-semibold view-all" style="border: 2px solid #9A86D1;" 
+                on:click={() => handleViewAll(category)}>
+          View All
+        </button>
+      {/if}
     </div>
-    <div class="d-flex justify-content-center">
-      <button class="btn px-4 fw-semibold view-all" style="border: 2px solid #9A86D1;" 
-      on:click={() => window.location.href = `/books?genre=${encodeURIComponent(category.name.toLowerCase())}`}>
-        View All
-      </button>
-    </div>
-
   {/each}
-
 </div>
 
 <style>

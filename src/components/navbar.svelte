@@ -1,44 +1,36 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { derived } from 'svelte/store';
-  import { userStore } from '$lib/userStore';
+  import { userStore, type User } from '$lib/userStore';
   import { goto } from '$app/navigation';
-  import type { User } from '$lib/userStore';
-import { allBooksByGenre } from '$lib/bookData';
-import type {Book} from '$lib/bookData';
+  import { allBooksByGenre } from '$lib/bookData';
+  
 
-const bookList: { title: string; genre: string }[] = [];
+  const bookList: { title: string; genre: string }[] = [];
 
-for (const genre in allBooksByGenre) {
-  allBooksByGenre[genre].forEach((book) => {
-    bookList.push({ title: book.title, genre });
-  });
-}
+  for (const genre in allBooksByGenre) {
+    allBooksByGenre[genre].forEach((book) => {
+      bookList.push({ title: book.title, genre });
+    });
+  }
 
-let suggestions: { title: string; genre: string }[] = [];
-
-$: suggestions = searchQuery
-  ? bookList.filter(book => book.title.toLowerCase().startsWith(searchQuery.toLowerCase()))
-  : [];
-
-function selectSuggestion(book: { title: string; genre: string }) {
-  goto(`/books?genre=${encodeURIComponent(book.genre)}`);
-  searchQuery = '';
-  suggestions = [];
-}
+  let suggestions: { title: string; genre: string }[] = [];
 
   let searchQuery = '';
 
+  $: suggestions = searchQuery
+    ? bookList.filter(book => book.title.toLowerCase().startsWith(searchQuery.toLowerCase()))
+    : [];
+
+  function selectSuggestion(book: { title: string; genre: string }) {
+    goto(`/books?genre=${encodeURIComponent(book.genre)}`);
+    searchQuery = '';
+    suggestions = [];
+  }
+
   const genres: string[] = [
-    "Action",
-    "Drama",
-    "Romance",
-    "Fantasy",
-    "Mystery",
-    "Comedy",
-    "Historical",
-    "Science Fiction",
-    "Horror"
+    "Action", "Drama", "Romance", "Fantasy", "Mystery",
+    "Comedy", "Historical", "Science Fiction", "Horror"
   ];
 
   const handleSearch = () => {
@@ -47,26 +39,41 @@ function selectSuggestion(book: { title: string; genre: string }) {
 
   const currentPath = derived(page, ($page) => $page.url.pathname.toLowerCase());
 
+  // Track visibility: hide navbar on /signup route
+  let visible = true;
+  currentPath.subscribe(path => {
+    visible = path !== '/signup';
+  });
+
   function goToGenre(genre: string) {
     window.location.href = `/books?genre=${encodeURIComponent(genre)}`;
   }
 
   let user: User = {
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-  loggedIn: false
-};
+    id: 0,
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    loggedIn: false
+  };
+  userStore.subscribe(value => {
+    user = value;
+    console.log('Navbar user:', user);
+  });
+
   const unsubscribe = userStore.subscribe(value => user = value);
 
   function onProfileClick() {
+    console.log('Profile clicked, loggedIn:', user.loggedIn);
     if (user?.loggedIn) {
-      goto('/Profile');    // Go to profile page if logged in
+      goto('/Profile');   // Go to profile page if logged in
     } else {
-      goto('/signup');     // Else go to signup/login page
+      goto('/signup');    // Else go to signup/login page
     }
   }
+
+  
 </script>
 
 <style>
@@ -290,42 +297,42 @@ nav {
     <a href="/" class="logo-link">
       <img src="/assets/VBS.png" alt="Virtual Bookstore Logo" class="logo-img" />
     </a>
+
     <div class="search-bar-container" style="position: relative;">
-  <input
-    type="text"
-    class="search-input"
-    placeholder="Type any book here"
-    bind:value={searchQuery}
-    on:keydown={(e) => e.key === 'Enter' && handleSearch()}
-  />
-  <button class="search-btn"  type="button" aria-label="Search" on:click={handleSearch}>
-    <i class="bi bi-search"></i>
-  </button>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Type any book here"
+        bind:value={searchQuery}
+        on:keydown={(e) => e.key === 'Enter' && handleSearch()}
+      />
+      <button class="search-btn" type="button" aria-label="Search" on:click={handleSearch}>
+        <i class="bi bi-search"></i>
+      </button>
 
-{#if suggestions.length > 0}
-  <ul class="dropdown">
-    {#each suggestions as book}
-      <li class="dropdown-item">
-        <button 
-          type="button"
-          on:click={() => selectSuggestion(book)}
-          on:keydown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              selectSuggestion(book);
-            }
-          }}
-          class="dropdown-btn"
-        >
-          {book.title}
-        </button>
-      </li>
-    {/each}
-  </ul>
-{/if}
+      {#if suggestions.length > 0}
+        <ul class="dropdown">
+          {#each suggestions as book}
+            <li class="dropdown-item">
+              <button
+                type="button"
+                on:click={() => selectSuggestion(book)}
+                on:keydown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    selectSuggestion(book);
+                  }
+                }}
+                class="dropdown-btn"
+              >
+                {book.title}
+              </button>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </div>
 
-
-</div>
     <div class="nav-links">
       <a href="/" class="nav-link" class:active={$currentPath === '/'}>Home</a>
       <a href="/Categories" class="nav-link" class:active={$currentPath === '/categories'}>Categories</a>
@@ -351,10 +358,10 @@ nav {
 
       <!-- Updated Profile/Login button -->
       <button class="nav-link profile-btn" on:click={onProfileClick}>
-        {#if user?.loggedIn}
-          {user.firstName.charAt(0).toUpperCase()} 
-        {:else}   
-          Profile/Login 
+        {#if user?.loggedIn && user?.name}
+          <span>{user.name.charAt(0).toUpperCase()}</span>
+        {:else}
+          Profile/Login
         {/if}
       </button>
     </div>

@@ -1,82 +1,66 @@
-import type { RequestHandler } from '@sveltejs/kit';
-import { users, type User } from '$lib/userStore';
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+import pool from '$lib/db';
+import * as bcrypt from 'bcryptjs';
 
-// Simple in-memory sessions store
-const sessions: Record<string, boolean> = {};
+export const POST: RequestHandler = async ({ request, cookies }) => {
+  try {
+    const body = await request.json();
+    const action = body.action;
 
-// POST /api/auth - handle signup or login based on "action" in body
-export const POST: RequestHandler = async ({ request }) => {
-  const body = await request.json();
-  const action = body.action;
+    if (action === 'login') {
+      const { email, password } = body;
 
-  if (action === 'signup') {
-    const { name, email, password } = body;
+      if (!email || !password) {
+        return json({ error: 'Email and password are required.' }, { status: 400 });
+      }
 
-    if (!name || !email || !password) {
-      return new Response(
-        JSON.stringify({ error: 'Name, email, and password are required.' }),
-        { status: 400 }
+      // Find user (using 'name' column)
+      const result = await pool.query(
+        'SELECT id, name, email, password_hash FROM users WHERE email = $1',
+        [email]
       );
+
+      if (result.rows.length === 0) {
+        return json({ error: 'Invalid credentials.' }, { status: 401 });
+      }
+
+      const user = result.rows[0];
+
+      // Verify password
+      const isValidPassword = await bcrypt.compare(password, user.password_hash);
+
+      if (!isValidPassword) {
+        return json({ error: 'Invalid credentials.' }, { status: 401 });
+      }
+
+      // Set session cookie
+      cookies.set('sessionId', user.id.toString(), {
+        path: '/',
+        httpOnly: true,
+        // secure: process.env.NODE_ENV === 'production',
+        maxAge: 60 * 60 * 24 * 7
+      });
+
+      return json({
+        success: true,
+        message: 'Login successful.',
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email
+        }
+      });
     }
 
-    if (users.find(u => u.email === email)) {
-      return new Response(
-        JSON.stringify({ error: 'Email already registered.' }),
-        { status: 409 }
-      );
-    }
-
-    const id = Date.now();
-    users.push({ id, name, email, password });
-
-    return new Response(
-      JSON.stringify({ success: true, message: 'User registered successfully.', id }),
-      { status: 201 }
-    );
+    return json({ error: 'Invalid action' }, { status: 400 });
+  } catch (error) {
+    console.error('Auth error:', error);
+    return json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  if (action === 'login') {
-    const { email, password } = body;
-
-    if (!email || !password) {
-      return new Response(
-        JSON.stringify({ error: 'Email and password are required.' }),
-        { status: 400 }
-      );
-    }
-
-    const user = users.find(u => u.email === email && u.password === password);
-
-    if (!user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid credentials' }),
-        { status: 401 }
-      );
-    }
-
-    sessions[email] = true;
-
-    return new Response(
-      JSON.stringify({ success: true, message: 'Logged in', userId: user.id }),
-      { status: 200 }
-    );
-  }
-
-  return new Response(
-    JSON.stringify({ error: 'Invalid POST action' }),
-    { status: 400 }
-  );
 };
 
-// DELETE /api/auth/logout - user logout
-export const DELETE: RequestHandler = async ({ request }) => {
-  const { email } = await request.json();
-
-  if (sessions[email]) {
-    delete sessions[email];
-    return new Response(JSON.stringify({ success: true, message: 'Logged out' }), { status: 200 });
-  }
-
-  return new Response(JSON.stringify({ error: 'Not logged in' }), { status: 400 });
+export const DELETE: RequestHandler = async ({ cookies }) => {
+  cookies.delete('sessionId', { path: '/' });
+  return json({ success: true, message: 'Logged out successfully' });
 };
-// GET /api/auth/status - check if user is logged in

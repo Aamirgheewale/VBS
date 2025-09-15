@@ -1,32 +1,31 @@
 import type { RequestHandler } from '@sveltejs/kit';
+import pool from '$lib/db';
 
-// In-memory categories array
-let categories: { id: number; name: string }[] = [
-  { id: 1, name: 'Fiction' },
-  { id: 2, name: 'Non-fiction' }
-];
-
-// GET /api/categories - return categories list
+// GET: List all categories
 export const GET: RequestHandler = async () => {
-  return new Response(JSON.stringify(categories), { status: 200 });
+  try {
+    const res = await pool.query('SELECT * FROM categories ORDER BY name ASC');
+    return new Response(JSON.stringify(res.rows), { status: 200 });
+  } catch (error) {
+    console.error('GET /api/categories error:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
+  }
 };
 
-// POST /api/categories - add new category
+// POST: Add a new category
 export const POST: RequestHandler = async ({ request }) => {
   const newCategory = await request.json();
-
   if (!newCategory.name) {
-    return new Response(
-      JSON.stringify({ error: 'Category name is required' }),
-      { status: 400 }
-    );
+    return new Response(JSON.stringify({ error: 'Category name is required' }), { status: 400 });
   }
-
-  const id = Date.now();
-  categories.push({ id, name: newCategory.name });
-
-  return new Response(
-    JSON.stringify({ success: true, message: 'Category added', id }),
-    { status: 201 }
-  );
+  try {
+    const res = await pool.query(
+      'INSERT INTO categories (name, description) VALUES ($1, $2) RETURNING *',
+      [newCategory.name, newCategory.description || ""]
+    );
+    return new Response(JSON.stringify({ success: true, category: res.rows[0] }), { status: 201 });
+  } catch (error) {
+    console.error('POST /api/categories error:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
+  }
 };

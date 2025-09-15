@@ -2,39 +2,46 @@
   import { goto } from '$app/navigation';
   import { userStore } from '$lib/userStore';
 
-
   let email = "";
   let password = "";
-  let rememberMe = false;
+  let rememberMe = true;
   let error = "";
   let success = "";
+  let isLoading = false;
 
   async function handleLogin() {
     error = "";
     success = "";
+    isLoading = true;
 
     if (!email || !password) {
       error = "Please enter both email and password.";
+      isLoading = false;
       return;
     }
 
-     const userData = {
-    firstName: "User",      // replace with real user first name
-    lastName: "",  
-    email: email,
-    phone: "",
-    loggedIn: true
-  };
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'login', email, password }),
+      });
 
-    userStore.set(userData);
+      const data = await res.json();
 
-
-    // TODO: Add actual authentication logic here (e.g., API call)
-    // Simulate success for demo
-    success = "Login successful! Redirecting...";
-
-    // Redirect to home or dashboard after short delay
-    setTimeout(() => goto('/'), 1200);
+      if (res.ok && data.success) {
+        userStore.set({ ...data.user, loggedIn: true });
+        success = "Login successful! Redirecting...";
+        setTimeout(() => goto('/'), 1200);
+      } else {
+        error = data.error || "Invalid credentials. Please try again.";
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      error = "An unexpected error occurred. Please try again later.";
+    } finally {
+      isLoading = false;
+    }
   }
 </script>
 
@@ -45,6 +52,7 @@
 </div>
 
 <img src="assets/VBS.png" alt="VBS Logo" class="login-logo" />
+
 <div class="login-main">
   <div class="login-box">
     <form class="login-form" on:submit|preventDefault={handleLogin}>
@@ -69,7 +77,9 @@
         <a href="/forgot" class="forgot-link">Forgot Password</a>
       </div>
 
-      <button class="login-btn" type="submit">Login</button>
+      <button class="login-btn" type="submit" disabled={isLoading}>
+        {isLoading ? "Logging in..." : "Login"}
+      </button>
 
       <div style="margin-top: 0.6rem;">
         Don't have an account? <a href="/signup">Sign up</a>
@@ -94,7 +104,6 @@
     </div>
   </div>
 </div>
-
 <style>
      .marquee-container {
      position: fixed;     /* Fix it relative to viewport */

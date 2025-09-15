@@ -1,33 +1,33 @@
 import { writable } from 'svelte/store';
 
-// --- For backend API ---
+// User interface aligned with backend user data structure
 export interface User {
-  id: number;
-  name: string;
-  email: string;
-  password: string;
+  id?: number;
+  name?: string;        // Changed from firstName/lastName to name (single string)
+  email?: string;
+  password?: string;
+  phone?: string;
+  loggedIn?: boolean;
 }
 
-// In-memory array for backend users (for API demo/dev purposes)
+// In-memory user array for backend API demo (empty by default)
 export const users: User[] = [
-
-    {
-    id: 1,
-    name: 'Alice Johnson',
-    email: 'alice@example.com',
-    password: 'password1'
-  },
-  {
-    id: 2,
-    name: 'Bob Smith',
-    email: 'bob@example.com',
-    password: 'password2'
-  }
+  // Example entries commented out
+  // {
+  //   id: 1,
+  //   name: 'Alice Johnson',
+  //   email: 'alice@example.com',
+  //   password: 'password1'
+  // },
+  // {
+  //   id: 2,
+  //   name: 'Bob Smith',
+  //   email: 'bob@example.com',
+  //   password: 'password2'
+  // }
 ];
 
- 
-
-// --- For frontend Svelte stores ---
+// Initialize storedUser from localStorage or default values
 const storedUser: User = typeof localStorage !== 'undefined' && localStorage.getItem('user')
   ? JSON.parse(localStorage.getItem('user') as string)
   : {
@@ -35,11 +35,14 @@ const storedUser: User = typeof localStorage !== 'undefined' && localStorage.get
       name: '',
       email: '',
       password: '',
-      // add other fields as needed
+      phone: '',
+      loggedIn: false,
     };
 
-export const userStore = writable(storedUser);
+// Create writable Svelte store for user
+export const userStore = writable<User>(storedUser);
 
+// Sync user store to localStorage on changes
 userStore.subscribe(user => {
   if (typeof localStorage !== 'undefined') {
     localStorage.setItem('user', JSON.stringify(user));

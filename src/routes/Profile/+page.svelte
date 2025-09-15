@@ -1,55 +1,33 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { writable } from 'svelte/store';
   import { userStore } from '$lib/userStore';
- import { wishlist, removeFromWishlist } from '$lib/wishlistStore';
-  import type { WishlistItem } from '$lib/wishlistStore';
-import { goto } from '$app/navigation';
-import { purchasedBooksStore } from '$lib/purchasedStore';
-import type { PurchasedBook } from '$lib/purchasedStore';
+  import { goto } from '$app/navigation';
+  import { wishlist, removeFromWishlist } from '$lib/wishlistStore';
+  import { purchasedBooksStore } from '$lib/purchasedStore';
 
+  // User shape with single name field
+  let user = { id: 0, name: '', email: '', phone: '', loggedIn: false };
+  userStore.subscribe(value => user = value);
 
-// At the top of your profile script
- interface PurchasedBook {
-  id: string;
-  title: string;
-  cover: string;    // cover image URL
-  pdfUrl?: string; 
-}
-let purchasedBooks: PurchasedBook[] = [
-  {
-    id: "book1",
-    title: "Chain of Gold",
-    cover: "/assets/card1.png",
-    pdfUrl: "/pdfs/book1.pdf"
-
-  }
-  // Add more books as user "purchases" them
-];
-purchasedBooksStore.subscribe(books => purchasedBooks = books);
-
-function viewBook(book: PurchasedBook) {
-  // You can show a modal, detailed page, or route elsewhere.
-  if (book.pdfUrl) {
-    window.open(book.pdfUrl, '_blank', 'noopener,noreferrer');
-  } else {
-    alert('PDF not available for this book.');
-  }
-} 
-
-
-let wishlistItems: WishlistItem[] = [];
-
-wishlist.subscribe(items => wishlistItems = items);
-
-
-  // Simulate user authentication and profile
-  let user = { firstName: 'xyz', lastName: 'xyz', email: 'xyz@gmail.com', phone: '+91 12345 67890', loggedIn: true };
-  const unsubscribe = userStore.subscribe(value => user = value);
-  // Track tab selection and edit mode
+  let tempUser = { ...user };
   let activeTab = 'personal';
   let editMode = false;
-  let tempUser = { ...user };
+
+  // Fetch user profile on mount if logged in
+  onMount(async () => {
+    if (user.loggedIn && user.id) {
+      try {
+        const res = await fetch(`/api/profile?userId=${user.id}`);
+        if (res.ok) {
+          const userData = await res.json();
+          userStore.set({ ...userData, loggedIn: true });
+          tempUser = { ...userData };
+        }
+      } catch (err) {
+        console.error('Failed to load user profile', err);
+      }
+    }
+  });
 
   function selectTab(tab: string) {
     activeTab = tab;
@@ -61,25 +39,68 @@ wishlist.subscribe(items => wishlistItems = items);
     editMode = true;
     tempUser = { ...user };
   }
+
   function cancelEdit() {
     editMode = false;
     tempUser = { ...user };
   }
-  function saveChanges() {
-    user = { ...tempUser, loggedIn: user.loggedIn };
-    editMode = false;
+
+  async function saveChanges() {
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...tempUser, id: user.id }), // tempUser.name = full name
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          userStore.set({ ...data.user, loggedIn: true });
+          editMode = false;
+        } else {
+          alert(data.error || 'Failed to save changes');
+        }
+      } else {
+        alert('Failed to save changes');
+      }
+    } catch (err) {
+      console.error('Save error', err);
+      alert('Error saving changes');
+    }
   }
 
-  // Simulate Auth: when not logged in, show Login/Profile button
-  $: initial = user.loggedIn ? user.firstName.charAt(0).toUpperCase() : null;
+  async function logout() {
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        userStore.set({ id: 0, name: '', email: '', phone: '', loggedIn: false });
+        goto('/');
+      } else {
+        alert(data.error || 'Failed to logout, please try again.');
+      }
+    } catch (err) {
+      console.error('Logout error:', err);
+      alert('An error occurred during logout.');
+    }
+  }
 
+  // Wishlist and Purchased books subscriptions
+  let wishlistItems = [];
+  wishlist.subscribe(items => wishlistItems = items);
 
-  function logout() {
-  userStore.set({ firstName: '', lastName: '', email: '', phone: '', loggedIn: false });
-  // Redirect to home or login page after logout
-  goto('/');  // or goto('/login');
-}
+  let purchasedBooks = [];
+  purchasedBooksStore.subscribe(books => purchasedBooks = books);
 
+  function viewBook(book) {
+    if (book.pdfUrl) {
+      window.open(book.pdfUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      alert('PDF not available for this book.');
+    }
+  }
 </script>
 
 <style>
@@ -241,7 +262,7 @@ wishlist.subscribe(items => wishlistItems = items);
   
   {#if user.loggedIn}
     <span class="welcome">
-      Welcome! {user.firstName}
+      Welcome! {user.name}
     </span>
     <button class="btn  log-out" on:click={logout}>Logout</button>
   {:else}
@@ -261,17 +282,16 @@ wishlist.subscribe(items => wishlistItems = items);
 
 {#if activeTab === 'personal'}
   <div class="profile-card">
-  {#if !editMode}
-  <button class="edit-btn" on:click={startEdit}>Edit Details</button>
-{/if}
-
+    {#if !editMode}
+      <button class="edit-btn" on:click={startEdit}>Edit Details</button>
+    {/if}
     <div class="fields-row">
       <div class="field-block">
-        <label class="field-label" for="firstName">First Name</label>
+        <label class="field-label" for="name">Full Name</label>
         {#if editMode}
-          <input type="text" bind:value={tempUser.firstName} />
+          <input type="text" bind:value={tempUser.name} placeholder="Full Name" />
         {:else}
-          <div class="read-view">{user.firstName}</div>
+          <div class="read-view">{user.name}</div>
         {/if}
       </div>
       <div class="field-block">
@@ -285,15 +305,7 @@ wishlist.subscribe(items => wishlistItems = items);
     </div>
     <div class="fields-row">
       <div class="field-block">
-        <label class="field-label" for="lastName">Last Name</label>
-        {#if editMode}
-          <input type="text" bind:value={tempUser.lastName} />
-        {:else}
-          <div class="read-view">{user.lastName}</div>
-        {/if}
-      </div>
-      <div class="field-block">
-        <label class="field-label" for="phoneNo">Phone No</label>
+        <label class="field-label" for="phone">Phone No</label>
         {#if editMode}
           <input type="tel" bind:value={tempUser.phone} />
         {:else}
@@ -309,7 +321,6 @@ wishlist.subscribe(items => wishlistItems = items);
     {/if}
   </div>
 {/if}
-
 {#if activeTab === 'wishlist'}
   <div class="profile-card">
     <h3>Wishlist ({wishlistItems.length})</h3>

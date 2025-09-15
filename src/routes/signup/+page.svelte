@@ -1,19 +1,23 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { userStore } from '$lib/userStore'; // import store
+  import { userStore } from '$lib/userStore';
 
-  // 1. Form fields
-  let firstName = "", lastName = "", email = "", phone = "";
-  let password = "", confirmPassword = "";
+  let firstName = "";
+  let lastName = "";
+  let email = "";
+  let phone = "";
+  let password = "";
+  let confirmPassword = "";
   let agree = false;
-  let error = "", success = "";
 
-  // 2. Submit handler
+  let error = "";
+  let success = "";
+  let isLoading = false;
+
   async function handleSignup() {
     error = "";
     success = "";
 
-    // Basic client validation
     if (!firstName || !lastName || !email || !phone || !password || !confirmPassword) {
       error = "Please fill in all fields.";
       return;
@@ -27,12 +31,46 @@
       return;
     }
 
-    // Here you POST data to an actual backend API endpoint
-    // For now, fake success
-    userStore.set({ firstName, lastName, email, phone, loggedIn: true }); // save in store
-    success = "Account created! Redirecting...";
+    isLoading = true;
 
-    setTimeout(() => goto('/'), 1200); // redirect after short delay for feedback
+    try {
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email,
+          phone,
+          password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        error = data.error || "Signup failed. Please try again.";
+        isLoading = false;
+        return;
+      }
+
+      success = "Account created! Please login.";
+
+      // Optionally clear form
+      firstName = lastName = email = phone = password = confirmPassword = "";
+      agree = false;
+
+      // Redirect to login after short delay
+      setTimeout(() => {
+        goto('/login');
+      }, 1200);
+
+    } catch (err) {
+      error = "An unexpected error occurred. Please try again.";
+      console.error("Signup error:", err);
+    } finally {
+      isLoading = false;
+    }
   }
 </script>
 
@@ -228,6 +266,11 @@ h1 {
       transform: translateX(-100%);
     }
   }
+
+    .signup-btn:disabled {
+    background: #bbb;
+    cursor: not-allowed;
+  }
 </style>
 
 <div class="marquee-container" role="marquee" aria-label="Scrolling welcome message">
@@ -236,45 +279,57 @@ h1 {
   </div>
 </div>
 
-
 <div class="signup-main">
   <div class="signup-box">
-    <img src="assets/VBS.png" alt="VBS Logo" class="signup-logo"/>
+    <img src="assets/VBS.png" alt="VBS Logo" class="signup-logo" />
     <div class="signup-img">
-      <!-- Use your chosen signup illustration! -->
       <img src="assets/signup.png" alt="Signup Visual" style="max-width:100%;height:auto;" />
     </div>
     <form class="signup-form" on:submit|preventDefault={handleSignup}>
-      <!-- VBS Logo -->
-      
       <h1>Sign up</h1>
-      <div style="color:#555;font-size:1.04rem;margin-bottom:0.3rem;">Let's get you all set up so you can access your personal account.</div>
+      <div style="color:#555;font-size:1.04rem;margin-bottom:0.3rem;">
+        Let's get you all set up so you can access your personal account.
+      </div>
+
       {#if error}
         <div class="error">{error}</div>
       {/if}
       {#if success}
         <div class="success">{success}</div>
       {/if}
+
       <div class="signup-fields">
-        <input type="text" placeholder="First Name" bind:value={firstName} autocomplete="given-name"/>
-        <input type="text" placeholder="Last Name" bind:value={lastName} autocomplete="family-name"/>
-        <input type="email" placeholder="Email" bind:value={email} autocomplete="email"/>
-        <input type="text" placeholder="Phone No" bind:value={phone} autocomplete="tel"/>
-        <input type="password" placeholder="Password" bind:value={password} autocomplete="new-password"/>
-        <input type="password" placeholder="Confirm Password" bind:value={confirmPassword} autocomplete="new-password"/>
+        <input type="text" placeholder="First Name" bind:value={firstName} autocomplete="given-name" />
+        <input type="text" placeholder="Last Name" bind:value={lastName} autocomplete="family-name" />
+        <input type="email" placeholder="Email" bind:value={email} autocomplete="email" />
+        <input type="text" placeholder="Phone No" bind:value={phone} autocomplete="tel" />
+        <input type="password" placeholder="Password" bind:value={password} autocomplete="new-password" />
+        <input type="password" placeholder="Confirm Password" bind:value={confirmPassword} autocomplete="new-password" />
       </div>
+
       <div class="terms-row">
-        <input type="checkbox" bind:checked={agree} id="agree" style="margin-right: 0.7rem;">
+        <input type="checkbox" bind:checked={agree} id="agree" style="margin-right: 0.7rem;" />
         <label for="agree">
           I agree to all the <span style="color:#653ae3;font-weight:600;">Terms</span> and <span style="color:#653ae3;font-weight:600;">Privacy Policies</span>
         </label>
       </div>
-      <button class="signup-btn" type="submit" disabled={!agree || !firstName || !lastName || !email || !phone || !password || !confirmPassword}>Create Account</button>
-      <div class="already-row">Already have an account? <a href="/login" style="color:#653ae3;font-weight:600;">Login</a></div>
+
+      <button
+        class="signup-btn"
+        type="submit"
+        disabled={isLoading || !agree || !firstName || !lastName || !email || !phone || !password || !confirmPassword}
+      >
+        {isLoading ? 'Creating Account...' : 'Create Account'}
+      </button>
+
+      <div class="already-row">
+        Already have an account? <a href="/login" style="color:#653ae3;font-weight:600;">Login</a>
+      </div>
+
       <div style="text-align:center;color:#444;font-size:1.02rem; margin:1.1rem 0 0.6rem 0;">Or Sign up with</div>
       <div class="signup-social">
-        <button type="button" class="social-btn"><img src="assets/facebook.ico" alt="Facebook Logo" style="width:24px;vertical-align:middle;"/> Facebook</button>
-        <button type="button" class="social-btn"><img src="assets/google.ico" alt="Google Logo" style="width:24px;vertical-align:middle;"/> Google</button>
+        <button type="button" class="social-btn"><img src="assets/facebook.ico" alt="Facebook Logo" style="width:24px;vertical-align:middle;" /> Facebook</button>
+        <button type="button" class="social-btn"><img src="assets/google.ico" alt="Google Logo" style="width:24px;vertical-align:middle;" /> Google</button>
       </div>
     </form>
   </div>

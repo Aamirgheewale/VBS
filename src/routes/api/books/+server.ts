@@ -1,111 +1,121 @@
-// src/routes/api/books/+server.ts
 import type { RequestHandler } from '@sveltejs/kit';
-import { books } from '$lib/books/+service'; // Assuming shared books array here
+import pool from '$lib/db';
 
-interface Book {
-  id: number;
-  title: string;
-  author: string;
-  description?: string;
-  publishedYear?: number;
-}
-
-// GET handler: fetch all books or single book by id query param
+// GET: fetch all books or a single book by id
 export const GET: RequestHandler = async ({ url }) => {
   const idStr = url.searchParams.get('id');
 
-  if (idStr) {
-    const id = Number(idStr);
-    const book = books.find(b => b.id === id);
+  try {
+    if (idStr) {
+      const id = Number(idStr);
+      const result = await pool.query('SELECT * FROM books WHERE id = $1', [id]);
+      if (result.rows.length === 0) {
+        return new Response(JSON.stringify({ error: 'Book not found' }), { status: 404 });
+      }
+      return new Response(JSON.stringify(result.rows[0]), { status: 200 });
+    }
 
-    if (!book) {
+    // Return all books ordered by title
+    const result = await pool.query('SELECT * FROM books ORDER BY title ASC');
+    return new Response(JSON.stringify(result.rows), { status: 200 });
+  } catch (error) {
+    console.error('GET /api/books error:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
+  }
+};
+
+// POST: add a new book
+export const POST: RequestHandler = async ({ request }) => {
+  const newBook = await request.json();
+
+  // Basic validation
+  if (!newBook.title || !newBook.author || !newBook.price || !newBook.category_id) {
+    return new Response(
+      JSON.stringify({ error: 'Title, author, price, and category_id are required' }),
+      { status: 400 }
+    );
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO books (title, author, description, price, publisher, cover_image_url, category_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [
+        newBook.title,
+        newBook.author,
+        newBook.description || '',
+        newBook.price,
+        newBook.publisher || '',
+        newBook.cover_image_url || '',
+        newBook.category_id,
+      ]
+    );
+    return new Response(JSON.stringify({ success: true, book: result.rows[0] }), { status: 201 });
+  } catch (error) {
+    console.error('POST /api/books error:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
+  }
+};
+
+// PUT: update existing book by id
+export const PUT: RequestHandler = async ({ request }) => {
+  const updatedBook = await request.json();
+
+  if (!updatedBook.id) {
+    return new Response(JSON.stringify({ error: 'Book ID required' }), { status: 400 });
+  }
+  if (!updatedBook.category_id) {
+    return new Response(JSON.stringify({ error: 'category_id is required' }), { status: 400 });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE books
+       SET title=$1, author=$2, description=$3, price=$4, publisher=$5, cover_image_url=$6, category_id=$7, updated_at=now()
+       WHERE id=$8
+       RETURNING *`,
+      [
+        updatedBook.title,
+        updatedBook.author,
+        updatedBook.description || '',
+        updatedBook.price,
+        updatedBook.publisher || '',
+        updatedBook.cover_image_url || '',
+        updatedBook.category_id,
+        updatedBook.id,
+      ]
+    );
+
+    if (result.rows.length === 0) {
       return new Response(JSON.stringify({ error: 'Book not found' }), { status: 404 });
     }
 
-    return new Response(JSON.stringify(book), { status: 200 });
+    return new Response(JSON.stringify({ success: true, book: result.rows[0] }), { status: 200 });
+  } catch (error) {
+    console.error('PUT /api/books error:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
   }
-
-  // Return all books if no id specified
-  return new Response(JSON.stringify(books), { status: 200 });
 };
 
-// POST handler: add a new book
-export const POST: RequestHandler = async ({ request }) => {
-  const newBook: Partial<Book> = await request.json();
-
-  if (!newBook.title || !newBook.author) {
-    return new Response(
-      JSON.stringify({ error: 'Title and author are required' }),
-      { status: 400 }
-    );
-  }
-
-  const id = Date.now();
-  const book: Book = { id, ...newBook } as Book;
-
-  books.push(book);
-
-  return new Response(
-    JSON.stringify({ success: true, message: 'Book added', book }),
-    { status: 201 }
-  );
-};
-
-// PUT handler: update existing book by id
-export const PUT: RequestHandler = async ({ request }) => {
-  const updatedBook: Partial<Book> = await request.json();
-
-  if (!updatedBook.id) {
-    return new Response(
-      JSON.stringify({ error: 'Book ID required' }),
-      { status: 400 }
-    );
-  }
-
-  const index = books.findIndex(b => b.id === updatedBook.id);
-
-  if (index === -1) {
-    return new Response(
-      JSON.stringify({ error: 'Book not found' }),
-      { status: 404 }
-    );
-  }
-
-  books[index] = { ...books[index], ...updatedBook };
-
-  return new Response(
-    JSON.stringify({ success: true, message: 'Book updated', book: books[index] }),
-    { status: 200 }
-  );
-};
-
-// DELETE handler: delete book by id
+// DELETE: delete book by id
 export const DELETE: RequestHandler = async ({ request }) => {
   const { id } = await request.json();
 
   if (!id) {
-    return new Response(
-      JSON.stringify({ error: 'Book ID required' }),
-      { status: 400 }
-    );
+    return new Response(JSON.stringify({ error: 'Book ID required' }), { status: 400 });
   }
 
-  const initialLength = books.length;
-  const filteredBooks = books.filter(b => b.id !== id);
+  try {
+    const result = await pool.query('DELETE FROM books WHERE id=$1 RETURNING id', [id]);
 
-  if (filteredBooks.length === initialLength) {
-    return new Response(
-      JSON.stringify({ error: 'Book not found' }),
-      { status: 404 }
-    );
+    if (result.rows.length === 0) {
+      return new Response(JSON.stringify({ error: 'Book not found' }), { status: 404 });
+    }
+
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
+  } catch (error) {
+    console.error('DELETE /api/books error:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
   }
-
-  // Update books array indirectly (depends on import/export behavior)
-  books.length = 0;
-  books.push(...filteredBooks);
-
-  return new Response(
-    JSON.stringify({ success: true, message: 'Book deleted' }),
-    { status: 200 }
-  );
 };

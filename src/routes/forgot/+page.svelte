@@ -3,16 +3,34 @@
   let success = '';
   let error = '';
 
-  function handleSubmit() {
-    error = '';
-    success = '';
-    if (!email) {
-      error = 'Please enter your email address.';
-      return;
-    }
-    // Simulated response
-    success = 'If your email is registered, a reset link will be sent!';
+  async function handleSubmit() {
+  error = '';
+  success = '';
+
+  if (!email) {
+    error = 'Please enter your email address.';
+    return;
   }
+
+  try {
+    const res = await fetch('/api/forgot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      success = data.message || 'If your email is registered, a reset link will be sent!';
+    } else {
+      error = data.error || 'Failed to send reset link. Please try again.';
+    }
+  } catch (err) {
+    error = 'An unexpected error occurred. Please try again.';
+    console.error('Forgot password error:', err);
+  }
+}
+
 </script>
 <div class="marquee-container" role="marquee" aria-label="Scrolling welcome message">
   <div class="marquee-content">

@@ -8,7 +8,7 @@ export const GET: RequestHandler = async ({ url }) => {
   }
   try {
     const query = `
-      SELECT id, title, author, price, cover_image_url AS img
+      SELECT id, title, author, price, cover_image_url
       FROM books
       WHERE category_id = $1
     `;

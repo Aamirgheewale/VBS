@@ -72,7 +72,11 @@
       goto('/signup');    // Else go to signup/login page
     }
   }
-
+let inputOpacity = 0.5;
+$: inputOpacity = searchQuery.length > 0 ? 1 : 0.5;
+function handleInputChange(event: Event) {
+    searchQuery = (event.target as HTMLInputElement).value;
+  }
   
 </script>
 
@@ -123,13 +127,24 @@ nav {
 }
 
 .search-input {
-  flex: 1;
+  /* flex: 1;
   border: none;
   outline: none;
   font-size: 1rem;
   background: transparent;
   padding: 0 0.5rem;
-  color: #232323;
+  color: #232323; */
+
+  flex: 1;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    background: transparent;
+    padding: 0 0.5rem;
+    color: #232323;
+    /* Dynamic opacity */
+    opacity: var(--input-opacity);
+    transition: opacity 0.2s ease;
 }
 
 .search-btn {
@@ -236,8 +251,8 @@ nav {
 }
 
 .dropdown {
-  position: absolute;
-  top: 42px; /* Adjust to just below search bar height */
+  /* position: absolute;
+  top: 42px; 
   left: 0;
   right: 0;
   background: white;
@@ -248,7 +263,20 @@ nav {
   z-index: 1000;
   padding: 0;
   margin: 0;
-  list-style: none;
+  list-style: none; */
+   position: absolute;
+    top: 42px; /* Just below input */
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 1000;
+    padding: 0;
+    margin: 0;
+    list-style: none;
 }
 
 .dropdown li {
@@ -264,11 +292,16 @@ nav {
   color: #fff;
 }
 .dropdown-item {
-  background: tra;
+  /* background: tra; */
+   padding: 0.5rem 1rem;
+    color: #68217A;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: background-color 0.2s;
   }
 
   
-    .dropdown-btn {
+    /* .dropdown-btn {
   background: transparent;
   border: none;
   box-shadow: none;
@@ -280,16 +313,22 @@ nav {
   border-radius: 10px;
   font-size: 1rem;
   transition: background-color 0.2s, color 0.2s;
-}
+} */
 
-.dropdown-btn:hover,
+/* .dropdown-btn:hover,
 .dropdown-btn:focus {
   background-color: #9a5cd5;
   color: #fff;
   outline: none;
-}
+} */
 
-  
+   .dropdown-item:hover,
+  .dropdown-item:focus {
+    background-color: #9a5cd5;
+    color: #fff;
+    outline: none;
+  }
+ 
 </style>
 
 <nav>
@@ -298,7 +337,7 @@ nav {
       <img src="/assets/VBS.png" alt="Virtual Bookstore Logo" class="logo-img" />
     </a>
 
-    <div class="search-bar-container" style="position: relative;">
+    <!-- <div class="search-bar-container" style="position: relative;">
       <input
         type="text"
         class="search-input"
@@ -331,7 +370,49 @@ nav {
           {/each}
         </ul>
       {/if}
-    </div>
+    </div> -->
+
+<div class="search-bar-container" style="position: relative;">
+  <input
+    type="text"
+    class="search-input"
+    placeholder="Type any book here"
+    bind:value={searchQuery}
+    style="--input-opacity: {inputOpacity}"
+    on:input={handleInputChange}
+    on:keydown={(e) => { if(e.key === 'Enter') handleSearch(); }}
+    aria-label="Search books"
+    autocomplete="off"
+  />
+  <button class="search-btn" type="button" aria-label="Search books" on:click={handleSearch}>
+    <i class="bi bi-search"></i>
+  </button>
+
+  {#if suggestions.length > 0}
+    <ul class="dropdown" role="listbox" aria-label="Search suggestions">
+      {#each suggestions as book, index}
+        <li 
+          class="dropdown-item" 
+          role="option" 
+          tabindex="0"
+          on:click={() => selectSuggestion(book)}
+          on:keydown={(e) => {
+            if(e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              selectSuggestion(book);
+            }
+          }}
+          aria-selected="false"
+          id={"suggestion-" + index}
+        >
+          {book.title}
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</div>
+
+
 
     <div class="nav-links">
       <a href="/" class="nav-link" class:active={$currentPath === '/'}>Home</a>

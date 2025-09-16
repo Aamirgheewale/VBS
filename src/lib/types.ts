@@ -8,6 +8,7 @@ export interface Book {
   firstName?: string;
   lastName?: string;
   cover_image_url?: string;
+  description?: string;
  
 }
 export interface WishlistItem {

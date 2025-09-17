@@ -2,6 +2,7 @@ import { writable } from 'svelte/store';
 
 export interface CartItem {
   id: string;
+  book_id: string;
   title: string;
   author: string;
   price: number;
@@ -17,6 +18,7 @@ const storedCart = typeof localStorage !== 'undefined'
 export const cart = writable<CartItem[]>(storedCart);
 
 cart.subscribe((items) => {
+  console.log("Cart Store Updated: ", items);
   if (typeof localStorage !== 'undefined') {
     localStorage.setItem('cart', JSON.stringify(items));
   }

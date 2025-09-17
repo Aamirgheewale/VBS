@@ -1,20 +1,34 @@
-import { writable } from 'svelte/store';
+// import { writable } from 'svelte/store';
 
+// export interface PurchasedBook {
+//   id: string;
+//   title: string;
+//   cover: string;
+//   pdfUrl?: string;
+// }
+
+// const storedPurchased = typeof localStorage !== 'undefined'
+//   ? JSON.parse(localStorage.getItem('purchasedBooks') || '[]')
+//   : [];
+
+// export const purchasedBooksStore = writable<PurchasedBook[]>(storedPurchased);
+
+// purchasedBooksStore.subscribe((items) => {
+//   if (typeof localStorage !== 'undefined') {
+//     localStorage.setItem('purchasedBooks', JSON.stringify(items));
+//   }
+// });
+
+import { writable } from 'svelte/store';
 export interface PurchasedBook {
   id: string;
+  bookId: number;
   title: string;
   cover: string;
   pdfUrl?: string;
+  author: string;
+  price: number;
+  image: string;
+  quantity: number;
 }
-
-const storedPurchased = typeof localStorage !== 'undefined'
-  ? JSON.parse(localStorage.getItem('purchasedBooks') || '[]')
-  : [];
-
-export const purchasedBooksStore = writable<PurchasedBook[]>(storedPurchased);
-
-purchasedBooksStore.subscribe((items) => {
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem('purchasedBooks', JSON.stringify(items));
-  }
-});
+export const purchasedBooksStore = writable<PurchasedBook[]>([]);

@@ -1,40 +1,49 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { userStore } from '$lib/userStore';
-  import { writable } from 'svelte/store';
+  import { writable, type Writable } from 'svelte/store';
 
-  export interface WishlistItem {
-    id: string;
-    bookId: number;
+   interface WishlistItem {
+    id: string;     // wishlist row ID from DB
+    bookId: number; // Book ID from DB
     title: string;
     price: number;
     image: string;
   }
 
-  let userId = 0;
+  // Writable store holding current wishlist items
+  const wishlist: Writable<WishlistItem[]> = writable([]);
+
+  let userId: number = 0;
+
+  // Subscribe to userStore for logged-in user changes
   userStore.subscribe(user => {
     userId = user?.id || 0;
     if (userId) loadWishlist();
     else wishlist.set([]);
   });
 
-  // Local wishlist store
-  const wishlist = writable<WishlistItem[]>([]);
-
-  // Load wishlist from backend
+  // Load wishlist from backend API for logged-in user
   async function loadWishlist() {
+    if (!userId) {
+      wishlist.set([]);
+      return;
+    }
     try {
       const res = await fetch(`/api/wishlist?userId=${userId}`);
       if (res.ok) {
-        const data = await res.json();
+        const data: WishlistItem[] = await res.json();
         wishlist.set(data);
+      } else {
+        wishlist.set([]);
       }
-    } catch (error) {
-      console.error('Failed to load wishlist:', error);
+    } catch (err) {
+      console.error('Failed to load wishlist:', err);
+      wishlist.set([]);
     }
   }
 
-  // Add to wishlist via backend
+  // Add book to wishlist via backend
   async function addToWishlist(item: WishlistItem) {
     if (!userId) {
       alert('Please login to add to wishlist.');
@@ -54,7 +63,7 @@
     }
   }
 
-  // Remove from wishlist via backend
+  // Remove book from wishlist via backend
   async function removeFromWishlist(id: string) {
     try {
       const res = await fetch('/api/wishlist', {
@@ -63,14 +72,14 @@
         body: JSON.stringify({ id }),
       });
       if (res.ok) {
-        wishlist.update(items => items.filter(item => item.id !== id));
+        await loadWishlist();
       }
     } catch (error) {
       console.error('Failed to remove item from wishlist:', error);
     }
   }
 
-  // Reactive subscription for UI rendering
+  // Reactive variable for UI
   let books: WishlistItem[] = [];
   wishlist.subscribe(value => books = value);
 </script>

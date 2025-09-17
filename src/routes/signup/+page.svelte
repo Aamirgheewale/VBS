@@ -14,6 +14,27 @@
   let success = "";
   let isLoading = false;
 
+let criteria = {
+  length: false,
+  uppercase: false,
+  lowercase: false,
+  number: false,
+  specialChar: false,
+};
+function checkPasswordStrength(pw: string) {
+  criteria.length = pw.length >= 8;
+  criteria.uppercase = /[A-Z]/.test(pw);
+  criteria.lowercase = /[a-z]/.test(pw);
+  criteria.number = /\d/.test(pw);
+  criteria.specialChar = /[!@#$%^&*]/.test(pw);
+}
+
+function isPasswordStrong() {
+  return Object.values(criteria).every(Boolean);
+}
+$: showRules = password.length > 0;
+
+
   async function handleSignup() {
     error = "";
     success = "";
@@ -30,6 +51,13 @@
       error = "You must agree to the Terms and Privacy Policies.";
       return;
     }
+    if (!validateEmail(email)) {
+    return;
+  }
+    if (!isPasswordStrong()) {
+    alert("Password does not meet all strength requirements");
+    return;
+  }
 
     isLoading = true;
 
@@ -72,6 +100,26 @@
       isLoading = false;
     }
   }
+  
+let errorMessage = '';
+
+function validateEmail(email: string) {
+  // Simple email pattern regex
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailPattern.test(email)) {
+    errorMessage = 'Please enter a valid email address';
+    return false;
+  }
+  // Optional: restrict to gmail.com only
+  if (!email.endsWith('@gmail.com')) {
+    errorMessage = 'Please enter a valid Gmail address';
+    return false;
+  }
+  errorMessage = '';
+  return true;
+}
+
+
 </script>
 
 
@@ -203,7 +251,7 @@ h1 {
   justify-content: center;
 }
 
-.social-btn {
+/* .social-btn {
   border: none;
   background: #fff;
   border-radius: 8px;
@@ -214,7 +262,7 @@ h1 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
+} */
 
 .error {
   color: #bb2222;
@@ -271,6 +319,27 @@ h1 {
     background: #bbb;
     cursor: not-allowed;
   }
+  .error {
+  color: red;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+.password-criteria {
+  font-size: 0.8rem;
+  list-style: none;
+  padding-left: 0;
+  margin-top: 0.5rem;
+}
+
+.password-criteria li {
+  margin: 0.25rem 0;
+  color: red;
+}
+
+.password-criteria li.valid {
+  color: green;
+}
+
 </style>
 
 <div class="marquee-container" role="marquee" aria-label="Scrolling welcome message">
@@ -297,14 +366,28 @@ h1 {
       {#if success}
         <div class="success">{success}</div>
       {/if}
+       {#if errorMessage}
+  <p class="error">{errorMessage}</p>
+{/if}
 
       <div class="signup-fields">
         <input type="text" placeholder="First Name" bind:value={firstName} autocomplete="given-name" />
         <input type="text" placeholder="Last Name" bind:value={lastName} autocomplete="family-name" />
         <input type="email" placeholder="Email" bind:value={email} autocomplete="email" />
-        <input type="text" placeholder="Phone No" bind:value={phone} autocomplete="tel" />
-        <input type="password" placeholder="Password" bind:value={password} autocomplete="new-password" />
+        
+        <input type="text" placeholder="Phone No" bind:value={phone} autocomplete="tel" maxlength="10" />
+      
+        <input type="password" placeholder="Password" bind:value={password} on:input={() => checkPasswordStrength(password)} autocomplete="new-password" />
         <input type="password" placeholder="Confirm Password" bind:value={confirmPassword} autocomplete="new-password" />
+        {#if showRules}
+        <ul class="password-criteria">
+  <li class={criteria.length ? 'valid' : 'invalid'}>Minimum 8 characters</li>
+  <li class={criteria.uppercase ? 'valid' : 'invalid'}>At least 1 uppercase letter</li>
+  <li class={criteria.lowercase ? 'valid' : 'invalid'}>At least 1 lowercase letter</li>
+  <li class={criteria.number ? 'valid' : 'invalid'}>At least 1 number</li>
+  <li class={criteria.specialChar ? 'valid' : 'invalid'}>At least 1 special character (!@#$%^&*)</li>
+</ul>
+{/if}
       </div>
 
       <div class="terms-row">
@@ -321,6 +404,7 @@ h1 {
       >
         {isLoading ? 'Creating Account...' : 'Create Account'}
       </button>
+       
 
       <div class="already-row">
         Already have an account? <a href="/login" style="color:#653ae3;font-weight:600;">Login</a>
@@ -328,8 +412,8 @@ h1 {
 
       <div style="text-align:center;color:#444;font-size:1.02rem; margin:1.1rem 0 0.6rem 0;">Or Sign up with</div>
       <div class="signup-social">
-        <button type="button" class="social-btn"><img src="assets/facebook.ico" alt="Facebook Logo" style="width:24px;vertical-align:middle;" /> Facebook</button>
-        <button type="button" class="social-btn"><img src="assets/google.ico" alt="Google Logo" style="width:24px;vertical-align:middle;" /> Google</button>
+        <!-- <button type="button" class="social-btn"><img src="assets/facebook.ico" alt="Facebook Logo" style="width:24px;vertical-align:middle;" /> Facebook</button> -->
+        <!-- <button type="button" class="social-btn"><img src="assets/google.ico" alt="Google Logo" style="width:24px;vertical-align:middle;" /> Google</button> -->
       </div>
     </form>
   </div>

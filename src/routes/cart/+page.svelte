@@ -73,7 +73,6 @@
   }
 
   function proceedToCheckout() {
-    
     if (cartItems.length === 0) {
       alert("Cart is empty.");
       return;
@@ -84,9 +83,6 @@
   $: subtotals = cartItems.map(item => item.quantity * item.price);
   $: subtotal = subtotals.reduce((a, b) => a + b, 0);
   $: total = subtotal;
-
-
-  
 </script>
 
 <div class="container my-5">

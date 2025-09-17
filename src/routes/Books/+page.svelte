@@ -278,7 +278,7 @@
   import { onMount } from 'svelte';
   import { addToCart } from '$lib/cartStore';
   import { showToast } from '$lib/toastStore';
-  import { wishlist, addToWishlist } from '$lib/wishlistStore';
+  import { wishlist } from '$lib/wishlistStore';
   import type { Book } from '$lib/books/+service';
   import { userStore } from '$lib/userStore';
   import { get } from 'svelte/store';
@@ -335,37 +335,93 @@
   //   });
   //   showToast('Item added to cart', 'success');
   // }
-function handleAddToCart(book: Book) {
+
+  
+// function handleAddToCart(book: Book) {
+//   const user = get(userStore);
+//   if (!user?.loggedIn) {
+//     showToast('Please log in to add items to your cart', 'error');
+//     return;
+//   }
+
+//   addToCart({
+//     id: String(book.id),
+//     title: book.title,
+//     author: book.author,
+//     price: book.price,
+//     image: book.cover_image_url ?? '',
+//   },1);
+//   showToast('Item added to cart', 'success');
+// }
+
+async function handleAddToCart(book: Book) {
+  console.log("addToCart called with id:", book.id);
   const user = get(userStore);
-  if (!user?.loggedIn) {
+  if (!user?.loggedIn || !user?.id) {
     showToast('Please log in to add items to your cart', 'error');
     return;
   }
 
-  addToCart({
-    id: String(book.id),
-    title: book.title,
-    author: book.author,
-    price: book.price,
-    image: book.cover_image_url ?? '',
-  },1);
-  showToast('Item added to cart', 'success');
-}
-  function favorite(book: Book) {
-    addToWishlist({
-      id: String(book.id),
-      title: book.title,
-      author: book.author,
-      image: book.cover_image_url ?? '',
-      price: book.price
-    });
-    showToast('Added to wishlist', 'success');
+  // POST to backend
+  const res = await fetch('/api/cart', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user_id: user.id,
+      book_id: book.id,
+      quantity: 1
+    })
+  });
+
+  if (res.ok) {
+    showToast('Item added to cart', 'success');
+    // Optionally: signal/update cart on navbar (with a store or event)
+  } else {
+    showToast('Could not add to cart. Please try again.', 'error');
   }
+}
+
+  // function favorite(book: Book) {
+  //   addToWishlist({
+  //     id: String(book.id),
+  //     title: book.title,
+  //     author: book.author,
+  //     image: book.cover_image_url ?? '',
+  //     price: book.price
+  //   });
+  //   showToast('Added to wishlist', 'success');
+  // }
+
+async function favorite(book: Book) {
+  const user = get(userStore);
+  if (!user?.loggedIn || !user?.id) {
+    showToast('Please log in to wishlist books', 'error');
+    return;
+  }
+
+  // POST to backend wishlist API
+  const res = await fetch('/api/wishlist', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: user.id,
+      bookId: book.id
+    })
+  });
+
+  if (res.ok) {
+    showToast('Added to wishlist', 'success');
+    // You may want to re-fetch wishlist state here if showing it
+  } else {
+    showToast('Could not add to wishlist. Please try again.', 'error');
+  }
+}
+
 
   console.log('Book images:', books.map(b => b.cover_image_url));
   console.log('Category map:', categoryMap);
 
-console.log('Fetched books:', books);
+console.log('Fetched books:', books); 
 
 </script>
 

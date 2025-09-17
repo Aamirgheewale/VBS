@@ -54,14 +54,14 @@
     </form>
     <div class="social-section">Or Sign up with</div>
     <div class="social-buttons">
-      <button type="button" class="social-btn">
+      <!-- <button type="button" class="social-btn">
         <img src="/assets/facebook.ico" alt="Facebook Logo" style="width:26px;vertical-align:middle; margin-right:6px;" />
         Facebook
-      </button>
-      <button type="button" class="social-btn">
+      </button> -->
+      <!-- <button type="button" class="social-btn">
         <img src="/assets/google.ico" alt="Google Logo" style="width:26px;vertical-align:middle; margin-right:6px;" />
         Google
-      </button>
+      </button> -->
     </div>
   </div>
   <div class="forgot-right">
@@ -225,7 +225,7 @@
   gap: 1.4rem;
 }
 
-.social-btn {
+/* .social-btn {
   background: #fff;
   border: 1.2px solid #cca5e5;
   border-radius: 12px;
@@ -243,5 +243,5 @@
   background: #c7b3e3;
   color: #512872;
   box-shadow: 0 2px 12px #a985c7;
-}
+} */
 </style>

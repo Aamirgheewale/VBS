@@ -17,7 +17,8 @@
     title: string;
     author: string;
     price: number;
-    img?: string;
+    // img?: string;
+    cover_image_url?: string
   }
 
   let categories: Category[] = [];
@@ -76,22 +77,50 @@ async function loadPreviews() {
   //   });
   //   showToast('Item added to cart', 'success');
   // }
-function handleAddToCart(book: Book) {
+// function handleAddToCart(book: Book) {
+//   const user = get(userStore);
+//   if (!user?.loggedIn) {
+//     showToast('Please log in to add items to your cart', 'error');
+//     return;
+//   }
+
+//   addToCart({
+//     id: String(book.id),
+//     title: book.title,
+//     author: book.author,
+//     price: book.price,
+//     image: book.img ?? '',
+//   },1);
+//   showToast('Item added to cart', 'success');
+// }
+
+async function handleAddToCart(book: Book) {
+  console.log("addToCart called with id:", book.id);
   const user = get(userStore);
-  if (!user?.loggedIn) {
+  if (!user?.loggedIn || !user?.id) {
     showToast('Please log in to add items to your cart', 'error');
     return;
   }
 
-  addToCart({
-    id: String(book.id),
-    title: book.title,
-    author: book.author,
-    price: book.price,
-    image: book.img ?? '',
-  },1);
-  showToast('Item added to cart', 'success');
+  // POST to backend
+  const res = await fetch('/api/cart', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user_id: user.id,
+      book_id: book.id,
+      quantity: 1
+    })
+  });
+
+  if (res.ok) {
+    showToast('Item added to cart', 'success');
+    // Optionally: signal/update cart on navbar (with a store or event)
+  } else {
+    showToast('Could not add to cart. Please try again.', 'error');
+  }
 }
+
 </script>
 
 <div class="container my-4">
@@ -102,7 +131,7 @@ function handleAddToCart(book: Book) {
       {#if categoryBooks[category.id]}
         {#each categoryBooks[category.id] as book}
           <div class="card text-center" style="min-width:210px; max-width:240px;">
-            <img src={book.img} alt={book.title} class="card-img-top" style="height:250px; object-fit:cover;" />
+            <img src={book.cover_image_url} alt={book.title} class="card-img-top" style="height:250px; object-fit:cover;" />
             <div class="card-body p-2">
               <h6 class="fw-bold mb-1">{book.title}</h6>
               <div class="text-muted" style="font-size:0.98rem;">{book.author}</div>

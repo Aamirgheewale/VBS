@@ -88,14 +88,14 @@
       <div class="social-row">Or Sign up with</div>
 
       <div class="login-social">
-        <button type="button" class="social-btn">
+        <!-- <button type="button" class="social-btn">
           <img src="/assets/facebook.ico" alt="Facebook Logo" style="width:24px;vertical-align:middle;" />
           Facebook
-        </button>
-        <button type="button" class="social-btn">
+        </button> -->
+        <!-- <button type="button" class="social-btn">
           <img src="/assets/google.ico" alt="Google Logo" style="width:24px;vertical-align:middle;" />
           Google
-        </button>
+        </button> -->
       </div>
     </form>
 
@@ -250,7 +250,7 @@
     margin-top: 1rem;
   }
 
-  .social-btn {
+  /* .social-btn {
     border: 1px solid #ccd;
     background: #fff;
     border-radius: 8px;
@@ -261,7 +261,7 @@
     display: flex;
     align-items: center;
     gap: 0.6rem;
-  }
+  } */
 
   .login-img {
     width: 35%;

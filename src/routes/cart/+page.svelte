@@ -13,7 +13,7 @@
     quantity: number;
   }> = [];
 
-  // Subscribe to user store and track userId changes
+  // Track userId and reload cart on change
   const unsubscribe = userStore.subscribe(user => {
     const newUserId = user.id ?? 0;
     if (newUserId !== userId) {
@@ -73,6 +73,7 @@
   }
 
   function proceedToCheckout() {
+    
     if (cartItems.length === 0) {
       alert("Cart is empty.");
       return;
@@ -83,6 +84,9 @@
   $: subtotals = cartItems.map(item => item.quantity * item.price);
   $: subtotal = subtotals.reduce((a, b) => a + b, 0);
   $: total = subtotal;
+
+
+  
 </script>
 
 <div class="container my-5">

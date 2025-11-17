@@ -7,6 +7,11 @@ const config = {
 
   kit: {
     adapter: adapter()
+  },
+  vite: {
+    ssr: {
+      noExternal: ['pg']
+    }
   }
 };
 
